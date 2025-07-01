@@ -108,4 +108,4 @@ uv build && databricks bundle deploy -t dev --profile dev
 
 ## License
 
-[Your License Here]
+MIT License - see [LICENSE](LICENSE) file for details.

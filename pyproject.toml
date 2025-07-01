@@ -7,7 +7,11 @@ name = "databricks-resource-monitor"
 version = "1.0.0"
 description = "Monitor and manage Databricks resources based on whitelist policies"
 readme = "README.md"
+license = "MIT"
 requires-python = ">=3.12"
+authors = [
+    {name = "Xavier Armitage", email = "xtarmitage@gmail.com"},
+]
 dependencies = [
     "databricks-sdk>=0.57.0",
 ]
