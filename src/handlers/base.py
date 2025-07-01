@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 from databricks.sdk import WorkspaceClient
 import logging
 
@@ -9,16 +9,17 @@ logger = logging.getLogger(__name__)
 class ResourceHandler(ABC):
     """Abstract base class for handling different Databricks resource types."""
     
-    def __init__(self, workspace_client: WorkspaceClient, whitelist: List[str]):
+    def __init__(self, workspace_client: WorkspaceClient, resource_config):
         """
         Initialize the resource handler.
         
         Args:
             workspace_client: Databricks workspace client
-            whitelist: List of allowed resource IDs
+            resource_config: ResourceConfig with whitelist and filtering options
         """
         self.client = workspace_client
-        self.whitelist = set(whitelist)
+        self.whitelist = set(resource_config.whitelist)
+        self.ignore_databricks_managed = resource_config.ignore_databricks_managed
         self.violations = []
     
     @abstractmethod
@@ -70,9 +71,25 @@ class ResourceHandler(ABC):
         """
         pass
     
+    def is_databricks_managed(self, resource: Dict[str, Any]) -> bool:
+        """
+        Determine if a resource is managed by Databricks.
+        
+        Args:
+            resource: Resource dictionary
+            
+        Returns:
+            True if the resource appears to be Databricks-managed
+        """
+        # Check if creator is None and name starts with 'databricks-'
+        creator = resource.get('creator')
+        name = resource.get('name', '')
+        
+        return creator is None and name.startswith('databricks-')
+    
     def check_resources(self, dry_run: bool = False) -> List[Dict[str, Any]]:
         """
-        Check all resources against the whitelist.
+        Check all resources against the whitelist and filtering rules.
         
         Args:
             dry_run: If True, only identify violations without taking action
@@ -88,19 +105,28 @@ class ResourceHandler(ABC):
         for resource in resources:
             resource_id = self.get_resource_id(resource)
             
-            if resource_id not in self.whitelist:
-                violation = {
-                    'id': resource_id,
-                    'details': self.get_resource_details(resource),
-                    'action_taken': None
-                }
-                
-                if not dry_run:
-                    logger.warning(f"Resource {resource_id} not in whitelist - marking for action")
-                else:
-                    logger.info(f"[DRY RUN] Resource {resource_id} not in whitelist")
-                
-                self.violations.append(violation)
+            # Skip if resource is in whitelist
+            if resource_id in self.whitelist:
+                continue
+            
+            # Skip if Databricks-managed and configured to ignore them
+            if self.ignore_databricks_managed and self.is_databricks_managed(resource):
+                logger.debug(f"Ignoring Databricks-managed resource: {resource_id}")
+                continue
+            
+            # Resource is a violation
+            violation = {
+                'id': resource_id,
+                'details': self.get_resource_details(resource),
+                'action_taken': None
+            }
+            
+            if not dry_run:
+                logger.warning(f"Resource {resource_id} not in whitelist - marking for action")
+            else:
+                logger.info(f"[DRY RUN] Resource {resource_id} not in whitelist")
+            
+            self.violations.append(violation)
         
         logger.info(f"Found {len(self.violations)} violations")
         return self.violations

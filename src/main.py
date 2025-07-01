@@ -48,6 +48,13 @@ def parse_arguments():
         help='Run in dry-run mode (identify violations without taking action)'
     )
     
+    parser.add_argument(
+        '--profile',
+        type=str,
+        default=None,
+        help='Databricks CLI profile to use for authentication (for local development)'
+    )
+    
     return parser.parse_args()
 
 
@@ -63,18 +70,22 @@ def main():
         
         # Initialize Databricks client
         # The SDK automatically uses the environment's authentication
-        client = WorkspaceClient()
+        # For local development, use the specified profile
+        if args.profile:
+            client = WorkspaceClient(profile=args.profile)
+        else:
+            client = WorkspaceClient()
         
-        # Load whitelist
+        # Load resource configuration
         try:
-            whitelist = ConfigLoader.load_whitelist(
+            resource_config = ConfigLoader.load_resource_config(
                 args.resource_type, 
                 args.whitelist_path
             )
         except FileNotFoundError:
             logger.error(
-                f"Whitelist file not found for resource type: {args.resource_type}. "
-                f"Please create a whitelist file or specify --whitelist-path"
+                f"Config file not found for resource type: {args.resource_type}. "
+                f"Please create a config file or specify --whitelist-path"
             )
             sys.exit(1)
         
@@ -82,7 +93,7 @@ def main():
         handler = ResourceHandlerFactory.create_handler(
             args.resource_type,
             client,
-            whitelist
+            resource_config
         )
         
         # Check resources

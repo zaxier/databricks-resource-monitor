@@ -5,5 +5,6 @@
     "staging-recommendation-model",
     "fraud-detection-v2",
     "customer-churn-predictor"
-  ]
+  ],
+  "ignore_databricks_managed": true
 }

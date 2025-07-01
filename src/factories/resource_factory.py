@@ -3,6 +3,7 @@ from databricks.sdk import WorkspaceClient
 from ..handlers.base import ResourceHandler
 from ..handlers.model_endpoints import ModelEndpointHandler
 from ..handlers.apps import AppsHandler
+from ..utils.config import ResourceConfig
 
 
 class ResourceHandlerFactory:
@@ -18,7 +19,7 @@ class ResourceHandlerFactory:
         cls, 
         resource_type: str, 
         workspace_client: WorkspaceClient, 
-        whitelist: List[str]
+        resource_config: ResourceConfig
     ) -> ResourceHandler:
         """
         Create a resource handler for the specified type.
@@ -26,7 +27,7 @@ class ResourceHandlerFactory:
         Args:
             resource_type: Type of resource ('model_endpoints', 'apps', etc.)
             workspace_client: Databricks workspace client
-            whitelist: List of allowed resource IDs
+            resource_config: ResourceConfig with whitelist and filtering options
             
         Returns:
             Appropriate ResourceHandler instance
@@ -42,7 +43,7 @@ class ResourceHandlerFactory:
             )
         
         handler_class = cls._handlers[resource_type]
-        return handler_class(workspace_client, whitelist)
+        return handler_class(workspace_client, resource_config)
     
     @classmethod
     def get_supported_types(cls) -> List[str]:
