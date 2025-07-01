@@ -41,7 +41,7 @@ class ConfigLoader:
             
             # For local development, use relative path
             if not os.path.exists(config_path):
-                project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+                project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
                 config_path = os.path.join(project_root, "config", "whitelists", f"{resource_type}.json")
         
         logger.info(f"Loading resource config from: {config_path}")
@@ -108,7 +108,7 @@ class ConfigLoader:
         Returns:
             Path to created whitelist file
         """
-        project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
         whitelist_dir = os.path.join(project_root, "config", "whitelists")
         os.makedirs(whitelist_dir, exist_ok=True)
         

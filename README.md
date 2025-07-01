@@ -76,15 +76,15 @@ uv pip install pytest black ruff  # Add as needed
 
 ### Iterative Development Workflow
 
-1. **Make code changes** to files in `src/`
+1. **Make code changes** to files in `src/databricks_resource_monitor/`
 
 2. **Test locally** in dry-run mode:
 ```bash
 # Test without making changes
-python -m src.main --resource-type model_endpoints --action-mode alert --dry-run
+python -m databricks_resource_monitor.main --resource-type model_endpoints --action-mode alert --dry-run
 
 # Test with custom whitelist
-python -m src.main --resource-type apps --action-mode alert --whitelist-path ./config/whitelists/apps.json --dry-run
+python -m databricks_resource_monitor.main --resource-type apps --action-mode alert --whitelist-path ./config/whitelists/apps.json --dry-run
 ```
 
 3. **Build and test the package**:
@@ -117,7 +117,7 @@ databricks bundle deploy -t dev
 Since this is a batch job (not a web service), there's no hot reloading. However, you can:
 
 1. **Make changes** to your code
-2. **Re-run locally** with `python -m src.main ...`
+2. **Re-run locally** with `python -m databricks_resource_monitor.main ...`
 3. **Rebuild and redeploy** when ready: `uv build && databricks bundle deploy -t dev`
 
 ### Whitelist Configuration
@@ -176,13 +176,13 @@ Test the monitor locally:
 
 ```bash
 # Check model endpoints (dry run)
-python -m src.main --resource-type model_endpoints --action-mode alert --dry-run
+python -m databricks_resource_monitor.main --resource-type model_endpoints --action-mode alert --dry-run
 
 # Delete unauthorized apps
-python -m src.main --resource-type apps --action-mode delete
+python -m databricks_resource_monitor.main --resource-type apps --action-mode delete
 
 # Use custom whitelist
-python -m src.main --resource-type model_endpoints --action-mode alert --whitelist-path /path/to/custom.json
+python -m databricks_resource_monitor.main --resource-type model_endpoints --action-mode alert --whitelist-path /path/to/custom.json
 ```
 
 ### Job Parameters
@@ -209,7 +209,7 @@ When the job runs in Databricks, it accepts these parameters:
 
 ### Adding a New Resource Type
 
-1. Create a new handler in `src/handlers/`:
+1. Create a new handler in `src/databricks_resource_monitor/handlers/`:
 ```python
 from .base import ResourceHandler
 
@@ -223,7 +223,7 @@ class MyResourceHandler(ResourceHandler):
     # Implement other required methods
 ```
 
-2. Register in `src/factories/resource_factory.py`:
+2. Register in `src/databricks_resource_monitor/factories/resource_factory.py`:
 ```python
 _handlers = {
     'model_endpoints': ModelEndpointHandler,

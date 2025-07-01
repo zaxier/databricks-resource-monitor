@@ -16,12 +16,22 @@ include:
 artifacts:
   resource_monitor_wheel:
     type: whl
-    path: ./
+    build: uv build
+    path: .
+
 
 resources:
   jobs:
     resource_monitor_endpoints:
       name: Resource Monitor - Model Endpoints
+
+      environments:
+        - environment_key: Default
+          spec:
+            client: "3"   
+            # dependencies:
+              # - databricks_resource_monitor-1.0.0-py3-none-any.whl
+              # - /Volumes/dev/test_wheel/files/databricks_resource_monitor-1.0.0-py3-none-any.whl
       
       tasks:
         - task_key: check_endpoints
@@ -33,21 +43,13 @@ resources:
               - "model_endpoints"
               - "--action-mode"
               - "alert"  # Change to "delete" to automatically delete
+          environment_key: Default
           
-          libraries:
-            - whl: ./dist/*.whl
-          
-          new_cluster:
-            spark_version: "13.3.x-scala2.12"
-            node_type_id: "i3.xlarge"
-            num_workers: 0
-            spark_conf:
-              spark.databricks.cluster.profile: singleNode
-              spark.master: local[*]
-      
-      schedule:
-        quartz_cron_expression: ${var.schedule_cron}
-        timezone_id: UTC
+      trigger:
+        pause_status: PAUSED
+        periodic:
+          interval: 6
+          unit: HOURS
       
       email_notifications:
         on_failure:
@@ -57,6 +59,11 @@ resources:
     
     resource_monitor_apps:
       name: Resource Monitor - Apps
+
+      environments:
+        - environment_key: Default
+          spec:
+            client: "3"   
       
       tasks:
         - task_key: check_apps
@@ -69,17 +76,8 @@ resources:
               - "--action-mode"
               - "alert"
           
-          libraries:
-            - whl: ./dist/*.whl
-          
-          new_cluster:
-            spark_version: "13.3.x-scala2.12"
-            node_type_id: "i3.xlarge"
-            num_workers: 0
-            spark_conf:
-              spark.databricks.cluster.profile: singleNode
-              spark.master: local[*]
-      
+          environment_key: Default
+
       schedule:
         quartz_cron_expression: ${var.schedule_cron}
         timezone_id: UTC
@@ -94,12 +92,15 @@ resources:
 targets:
   dev:
     mode: development
-    workspace:
-      host: ${DATABRICKS_HOST}
     
     variables:
-      alert_email: dev-alerts@company.com
-      schedule_cron: "0 0 */1 * * ?"  # Every hour in dev
+      alert_email: xavier@databricks.com
+
+    resources:
+      jobs:
+        resource_monitor_endpoints:
+          trigger:
+            pause_status: PAUSED
   
   staging:
     mode: development

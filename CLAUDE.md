@@ -16,13 +16,13 @@ uv pip install -e .
 uv pip install databricks-sdk>=0.57.0
 
 # Run locally in dry-run mode (no actions taken)
-python -m src.main --resource-type model_endpoints --action-mode alert --dry-run
+python -m databricks_resource_monitor.main --resource-type model_endpoints --action-mode alert --dry-run
 
 # Run with deletion mode
-python -m src.main --resource-type apps --action-mode delete
+python -m databricks_resource_monitor.main --resource-type apps --action-mode delete
 
 # Use custom whitelist
-python -m src.main --resource-type model_endpoints --action-mode alert --whitelist-path /path/to/custom.json
+python -m databricks_resource_monitor.main --resource-type model_endpoints --action-mode alert --whitelist-path /path/to/custom.json
 ```
 
 ### Deployment
@@ -52,13 +52,13 @@ uv build
 ### Core Pattern: Strategy + Factory
 The system uses an extensible handler architecture:
 
-1. **Abstract Base**: `ResourceHandler` (src/handlers/base.py) defines the interface:
+1. **Abstract Base**: `ResourceHandler` (src/databricks_resource_monitor/handlers/base.py) defines the interface:
    - `list_resources()`: Enumerate all resources of type
    - `delete_resource()`: Remove a specific resource
    - `check_resources()`: Compare against whitelist
    - `handle_violations()`: Execute alert or delete action
 
-2. **Factory**: `ResourceHandlerFactory` (src/factories/resource_factory.py) creates handlers based on resource type
+2. **Factory**: `ResourceHandlerFactory` (src/databricks_resource_monitor/factories/resource_factory.py) creates handlers based on resource type
 
 3. **Concrete Handlers**: Implement specific resource logic
    - `ModelEndpointHandler`: Uses `client.serving_endpoints.*` APIs
@@ -73,12 +73,12 @@ Since Databricks doesn't have programmatic alert creation, the system uses job f
 ### Whitelist Management
 - Whitelists stored in `config/whitelists/{resource_type}.json`
 - Support both array format and object with description
-- Loaded by `ConfigLoader` (src/utils/config.py)
+- Loaded by `ConfigLoader` (src/databricks_resource_monitor/utils/config.py)
 - Can override with `--whitelist-path` parameter
 
 ## Adding New Resource Types
 
-1. Create handler in `src/handlers/new_resource.py`:
+1. Create handler in `src/databricks_resource_monitor/handlers/new_resource.py`:
 ```python
 from .base import ResourceHandler
 
@@ -93,7 +93,7 @@ class NewResourceHandler(ResourceHandler):
     # Implement other abstract methods
 ```
 
-2. Register in `src/factories/resource_factory.py`:
+2. Register in `src/databricks_resource_monitor/factories/resource_factory.py`:
 ```python
 _handlers = {
     'model_endpoints': ModelEndpointHandler,
@@ -111,5 +111,5 @@ _handlers = {
 - **Authentication**: Uses Databricks SDK auto-authentication (env vars, CLI config)
 - **Production**: Must use service principal (configured in databricks.yml targets)
 - **Whitelist Paths**: Default to `/Workspace/config/whitelists/` in Databricks, falls back to local paths for development
-- **Job Parameters**: All parameters defined in `parse_arguments()` in src/main.py
+- **Job Parameters**: All parameters defined in `parse_arguments()` in src/databricks_resource_monitor/main.py
 - **Email Recipients**: Configured per target in databricks.yml variables

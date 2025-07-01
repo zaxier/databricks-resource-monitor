@@ -13,10 +13,10 @@ dependencies = [
 ]
 
 [project.scripts]
-databricks-resource-monitor = "src.main:main"
+databricks-resource-monitor = "databricks_resource_monitor.main:main"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src"]
+packages = ["src/databricks_resource_monitor"]
 
 [tool.hatch.build]
 include = [
