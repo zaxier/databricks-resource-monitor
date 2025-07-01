@@ -29,8 +29,10 @@ resources:
         - environment_key: Default
           spec:
             client: "3"   
-            # dependencies:
-              # - databricks_resource_monitor-1.0.0-py3-none-any.whl
+            dependencies:
+              - ./dist/databricks_resource_monitor-1.0.0-py3-none-any.whl
+              # - databricks_resource_monitor==1.0.0
+              # - ${artifact.resource_monitor_wheel}
               # - /Volumes/dev/test_wheel/files/databricks_resource_monitor-1.0.0-py3-none-any.whl
       
       tasks:
@@ -75,7 +77,6 @@ resources:
               - "apps"
               - "--action-mode"
               - "alert"
-          
           environment_key: Default
 
       schedule:
