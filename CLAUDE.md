@@ -16,35 +16,29 @@ uv pip install -e .
 uv pip install databricks-sdk>=0.57.0
 
 # Run locally in dry-run mode (no actions taken)
-python -m databricks_resource_monitor.main --resource-type model_endpoints --action-mode alert --dry-run
+python -m databricks_resource_monitor --resource-type model_endpoints --action-mode alert --dry-run
 
 # Run with deletion mode
-python -m databricks_resource_monitor.main --resource-type apps --action-mode delete
+python -m databricks_resource_monitor --resource-type apps --action-mode delete
 
 # Use custom whitelist
-python -m databricks_resource_monitor.main --resource-type model_endpoints --action-mode alert --whitelist-path /path/to/custom.json
+python -m databricks_resource_monitor --resource-type model_endpoints --action-mode alert --whitelist-path /path/to/custom.json
+
+# Use console script (after installation)
+databricks-resource-monitor --resource-type model_endpoints --action-mode alert --dry-run
 ```
 
 ### Deployment
 ```bash
 # Set required environment variables
-export DATABRICKS_HOST="https://your-workspace.cloud.databricks.com"
-export DATABRICKS_TOKEN="your-token"  # Or use other auth methods
-export DATABRICKS_SERVICE_PRINCIPAL="service-principal-name"  # For production
-
+databricks auth login --host <workspace_url> --profile <profile_name>
 # Deploy to different environments
-databricks bundle deploy -t dev
-databricks bundle deploy -t staging
-databricks bundle deploy -t prod
+databricks bundle deploy -t dev --profile <profile_name>
+databricks bundle deploy -t staging --profile <profile_name>
+databricks bundle deploy -t prod --profile <profile_name>
 
 # Deploy with custom variables
-databricks bundle deploy -t prod --var="alert_email=custom@company.com" --var="schedule_cron=0 */30 * * * ?"
-```
-
-### Building
-```bash
-# Build wheel package (required before deployment)
-uv build
+databricks bundle deploy -t prod --var="alert_email=custom@company.com"
 ```
 
 ## Architecture
@@ -65,14 +59,16 @@ The system uses an extensible handler architecture:
    - `AppsHandler`: Uses `client.apps.*` APIs
 
 ### Alert Mechanism
-Since Databricks doesn't have programmatic alert creation, the system uses job failure notifications:
+Since Databricks doesn't have programmatic alert creation (alerts currently in Beta), the system uses job failure notifications:
 - In alert mode, violations trigger an exception
 - Exception causes job failure
 - Job failure triggers configured email notifications in databricks.yml
 
 ### Whitelist Management
-- Whitelists stored in `config/whitelists/{resource_type}.json`
-- Support both array format and object with description
+- Whitelists embedded in package at `src/databricks_resource_monitor/config/whitelists/{resource_type}.json`
+- Fallback to `/Workspace/config/whitelists/{resource_type}.json` in Databricks
+- Support both array format and object with description plus filtering options
+- Enhanced `ResourceConfig` supports `ignore_databricks_managed` flag
 - Loaded by `ConfigLoader` (src/databricks_resource_monitor/utils/config.py)
 - Can override with `--whitelist-path` parameter
 
@@ -102,14 +98,13 @@ _handlers = {
 }
 ```
 
-3. Create whitelist: `config/whitelists/new_resource.json`
+3. Create whitelist: `src/databricks_resource_monitor/config/whitelists/new_resource.json`
 
 4. Optionally add job config in `databricks.yml` or `resources/*.yml`
 
 ## Important Considerations
 
 - **Authentication**: Uses Databricks SDK auto-authentication (env vars, CLI config)
-- **Production**: Must use service principal (configured in databricks.yml targets)
-- **Whitelist Paths**: Default to `/Workspace/config/whitelists/` in Databricks, falls back to local paths for development
+- **Whitelist Paths**: Loaded from package resources first, fallback to `/Workspace/config/whitelists/` in Databricks, then local paths for development
 - **Job Parameters**: All parameters defined in `parse_arguments()` in src/databricks_resource_monitor/main.py
 - **Email Recipients**: Configured per target in databricks.yml variables
