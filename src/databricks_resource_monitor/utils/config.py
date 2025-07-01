@@ -2,6 +2,8 @@ import json
 import os
 from typing import List, Optional
 import logging
+import importlib.resources as pkg_resources
+from databricks_resource_monitor.config import whitelists
 
 logger = logging.getLogger(__name__)
 
@@ -35,21 +37,32 @@ class ConfigLoader:
         """
         if custom_path:
             config_path = custom_path
-        else:
-            # Default path relative to the job's working directory
-            config_path = f"/Workspace/config/whitelists/{resource_type}.json"
-            
-            # For local development, use relative path
-            if not os.path.exists(config_path):
-                project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-                config_path = os.path.join(project_root, "config", "whitelists", f"{resource_type}.json")
-        
-        logger.info(f"Loading resource config from: {config_path}")
-        
-        try:
+            logger.info(f"Loading resource config from custom path: {config_path}")
             with open(config_path, 'r') as f:
                 data = json.load(f)
+        else:
+            # First, try to load from package resources
+            try:
+                logger.info(f"Loading resource config from package for: {resource_type}")
+                config_file = f"{resource_type}.json"
+                config_data = pkg_resources.read_text(whitelists, config_file)
+                data = json.loads(config_data)
+                logger.info(f"Successfully loaded config from package")
+            except (FileNotFoundError, ModuleNotFoundError) as e:
+                logger.info(f"Package resource not found, trying workspace path")
+                # Fallback to Databricks workspace path
+                config_path = f"/Workspace/config/whitelists/{resource_type}.json"
                 
+                # For local development, use relative path
+                if not os.path.exists(config_path):
+                    project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+                    config_path = os.path.join(project_root, "config", "whitelists", f"{resource_type}.json")
+                
+                logger.info(f"Loading resource config from: {config_path}")
+                with open(config_path, 'r') as f:
+                    data = json.load(f)
+        
+        try:
             # Support both array format and object with 'whitelist' key
             if isinstance(data, list):
                 whitelist = data

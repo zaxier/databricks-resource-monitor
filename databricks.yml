@@ -4,7 +4,8 @@ bundle:
 variables:
   alert_email:
     description: Email address for alert notifications
-    default: alerts@company.com
+    # default: alerts@company.com
+    default: xavier@databricks.com
   
   schedule_cron:
     description: Cron expression for job schedule
@@ -31,9 +32,6 @@ resources:
             client: "3"   
             dependencies:
               - ./dist/databricks_resource_monitor-1.0.0-py3-none-any.whl
-              # - databricks_resource_monitor==1.0.0
-              # - ${artifact.resource_monitor_wheel}
-              # - /Volumes/dev/test_wheel/files/databricks_resource_monitor-1.0.0-py3-none-any.whl
       
       tasks:
         - task_key: check_endpoints
@@ -66,6 +64,8 @@ resources:
         - environment_key: Default
           spec:
             client: "3"   
+            dependencies:
+              - ./dist/databricks_resource_monitor-1.0.0-py3-none-any.whl
       
       tasks:
         - task_key: check_apps
@@ -79,11 +79,12 @@ resources:
               - "alert"
           environment_key: Default
 
-      schedule:
-        quartz_cron_expression: ${var.schedule_cron}
-        timezone_id: UTC
-        pause_status: PAUSED  # Start paused since apps monitoring is optional
-      
+      trigger:
+        pause_status: PAUSED
+        periodic:
+          interval: 6
+          unit: HOURS
+
       email_notifications:
         on_failure:
           - ${var.alert_email}
@@ -94,9 +95,6 @@ targets:
   dev:
     mode: development
     
-    variables:
-      alert_email: xavier@databricks.com
-
     resources:
       jobs:
         resource_monitor_endpoints:
@@ -106,7 +104,7 @@ targets:
   staging:
     mode: development
     workspace:
-      host: ${DATABRICKS_HOST}
+      host: https://your-workspace-url.cloud.databricks.com
       root_path: /Shared/.bundle/staging/${bundle.name}
     
     variables:
@@ -115,11 +113,11 @@ targets:
   prod:
     mode: production
     workspace:
-      host: ${DATABRICKS_HOST}
+      host: https://your-workspace-url.cloud.databricks.com
       root_path: /Shared/.bundle/prod/${bundle.name}
     
     run_as:
-      service_principal_name: ${DATABRICKS_SERVICE_PRINCIPAL}
+      service_principal_name: your-service-principal-name
     
     variables:
       alert_email: prod-alerts@company.com

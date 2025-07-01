@@ -1,5 +1,5 @@
 {
-  "description": "Whitelist for allowed model serving endpoints",
+  "description": "Whitelist for allowed model serving endpoints - EXAMPLE",
   "whitelist": [
     "production-recommendation-model",
     "staging-recommendation-model",

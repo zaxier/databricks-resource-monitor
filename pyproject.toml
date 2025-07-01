@@ -17,11 +17,7 @@ databricks-resource-monitor = "databricks_resource_monitor.main:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/databricks_resource_monitor"]
-
-[tool.hatch.build]
 include = [
-    "src/**/*.py",
-    "src/**/*.json",
-    "config/whitelists/*.json",
+    "**/*.json",
 ]
 

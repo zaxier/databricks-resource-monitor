@@ -1,5 +1,5 @@
 {
-  "description": "Whitelist for allowed Databricks apps",
+  "description": "Whitelist for allowed Databricks apps - EXAMPLE",
   "whitelist": [
     "dashboard-app",
     "analytics-viewer",
