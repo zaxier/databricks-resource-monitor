@@ -23,15 +23,13 @@ resources:
             - whl: ./dist/*.whl
           
           new_cluster:
-            spark_version: "13.3.x-scala2.12"
-            node_type_id: "i3.xlarge"
+            spark_version: "16.4.x-scala2.13"
+            node_type_id: "r5d.large"
             num_workers: 0
-            spark_conf:
-              spark.databricks.cluster.profile: singleNode
-              spark.master: local[*]
+            singleNode: true
       
       schedule:
-        quartz_cron_expression: "0 */30 * * * ?"  # Every 30 minutes
+        quartz_cron_expression: "0 0 */6 * * ?"  # Every 6 hours
         timezone_id: UTC
       
       email_notifications:
