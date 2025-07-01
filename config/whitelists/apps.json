@@ -1,0 +1,8 @@
+{
+  "description": "Whitelist for allowed Databricks apps",
+  "whitelist": [
+    "dashboard-app",
+    "analytics-viewer",
+    "reporting-tool"
+  ]
+}

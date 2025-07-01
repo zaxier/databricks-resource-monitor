@@ -1,0 +1,45 @@
+# Example: Custom monitoring job for specific use case
+# Rename this file to custom_monitors.yml to include it
+
+resources:
+  jobs:
+    resource_monitor_critical_endpoints:
+      name: Resource Monitor - Critical Endpoints Only
+      
+      tasks:
+        - task_key: check_critical
+          python_wheel_task:
+            package_name: databricks_resource_monitor
+            entry_point: main
+            parameters:
+              - "--resource-type"
+              - "model_endpoints"
+              - "--action-mode"
+              - "delete"  # Auto-delete for critical monitoring
+              - "--whitelist-path"
+              - "/Workspace/config/whitelists/critical_endpoints.json"
+          
+          libraries:
+            - whl: ./dist/*.whl
+          
+          new_cluster:
+            spark_version: "13.3.x-scala2.12"
+            node_type_id: "i3.xlarge"
+            num_workers: 0
+            spark_conf:
+              spark.databricks.cluster.profile: singleNode
+              spark.master: local[*]
+      
+      schedule:
+        quartz_cron_expression: "0 */30 * * * ?"  # Every 30 minutes
+        timezone_id: UTC
+      
+      email_notifications:
+        on_start:
+          - critical-alerts@company.com
+        on_failure:
+          - critical-alerts@company.com
+        on_success:
+          - critical-alerts@company.com  # Notify on deletions too
+      
+      max_concurrent_runs: 1

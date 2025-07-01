@@ -1,0 +1,124 @@
+bundle:
+  name: databricks-resource-monitor
+
+variables:
+  alert_email:
+    description: Email address for alert notifications
+    default: alerts@company.com
+  
+  schedule_cron:
+    description: Cron expression for job schedule
+    default: "0 0 */6 * * ?"  # Every 6 hours
+
+include:
+  - resources/*.yml
+
+artifacts:
+  resource_monitor_wheel:
+    type: whl
+    path: ./
+
+resources:
+  jobs:
+    resource_monitor_endpoints:
+      name: Resource Monitor - Model Endpoints
+      
+      tasks:
+        - task_key: check_endpoints
+          python_wheel_task:
+            package_name: databricks_resource_monitor
+            entry_point: main
+            parameters:
+              - "--resource-type"
+              - "model_endpoints"
+              - "--action-mode"
+              - "alert"  # Change to "delete" to automatically delete
+          
+          libraries:
+            - whl: ./dist/*.whl
+          
+          new_cluster:
+            spark_version: "13.3.x-scala2.12"
+            node_type_id: "i3.xlarge"
+            num_workers: 0
+            spark_conf:
+              spark.databricks.cluster.profile: singleNode
+              spark.master: local[*]
+      
+      schedule:
+        quartz_cron_expression: ${var.schedule_cron}
+        timezone_id: UTC
+      
+      email_notifications:
+        on_failure:
+          - ${var.alert_email}
+      
+      max_concurrent_runs: 1
+    
+    resource_monitor_apps:
+      name: Resource Monitor - Apps
+      
+      tasks:
+        - task_key: check_apps
+          python_wheel_task:
+            package_name: databricks_resource_monitor
+            entry_point: main
+            parameters:
+              - "--resource-type"
+              - "apps"
+              - "--action-mode"
+              - "alert"
+          
+          libraries:
+            - whl: ./dist/*.whl
+          
+          new_cluster:
+            spark_version: "13.3.x-scala2.12"
+            node_type_id: "i3.xlarge"
+            num_workers: 0
+            spark_conf:
+              spark.databricks.cluster.profile: singleNode
+              spark.master: local[*]
+      
+      schedule:
+        quartz_cron_expression: ${var.schedule_cron}
+        timezone_id: UTC
+        pause_status: PAUSED  # Start paused since apps monitoring is optional
+      
+      email_notifications:
+        on_failure:
+          - ${var.alert_email}
+      
+      max_concurrent_runs: 1
+
+targets:
+  dev:
+    mode: development
+    workspace:
+      host: ${DATABRICKS_HOST}
+    
+    variables:
+      alert_email: dev-alerts@company.com
+      schedule_cron: "0 0 */1 * * ?"  # Every hour in dev
+  
+  staging:
+    mode: development
+    workspace:
+      host: ${DATABRICKS_HOST}
+      root_path: /Shared/.bundle/staging/${bundle.name}
+    
+    variables:
+      alert_email: staging-alerts@company.com
+  
+  prod:
+    mode: production
+    workspace:
+      host: ${DATABRICKS_HOST}
+      root_path: /Shared/.bundle/prod/${bundle.name}
+    
+    run_as:
+      service_principal_name: ${DATABRICKS_SERVICE_PRINCIPAL}
+    
+    variables:
+      alert_email: prod-alerts@company.com
+      schedule_cron: "0 0 */4 * * ?"  # Every 4 hours in prod

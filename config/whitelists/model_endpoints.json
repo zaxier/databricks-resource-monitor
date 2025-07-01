@@ -1,0 +1,9 @@
+{
+  "description": "Whitelist for allowed model serving endpoints",
+  "whitelist": [
+    "production-recommendation-model",
+    "staging-recommendation-model",
+    "fraud-detection-v2",
+    "customer-churn-predictor"
+  ]
+}

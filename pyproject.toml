@@ -1,0 +1,27 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "databricks-resource-monitor"
+version = "1.0.0"
+description = "Monitor and manage Databricks resources based on whitelist policies"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "databricks-sdk>=0.57.0",
+]
+
+[project.scripts]
+databricks-resource-monitor = "src.main:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[tool.hatch.build]
+include = [
+    "src/**/*.py",
+    "src/**/*.json",
+    "config/whitelists/*.json",
+]
+
