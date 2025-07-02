@@ -63,6 +63,11 @@ Whitelists are embedded in the package at `src/databricks_resource_monitor/confi
 }
 ```
 
+**Configuration options:**
+- `description`: Optional description of the whitelist
+- `whitelist`: Array of allowed resource names
+- `ignore_databricks_managed`: (Optional, default: false) When set to `true`, automatically ignores resources created by Databricks itself. A resource is considered "Databricks-managed" if it has no creator and its name starts with `databricks-`. This prevents alerts for system-generated resources.
+
 ### Parameters
 
 - `--resource-type`: `model_endpoints` or `apps`
