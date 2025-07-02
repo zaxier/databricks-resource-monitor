@@ -45,7 +45,7 @@ resources:
           environment_key: Default
           
       trigger:
-        pause_status: PAUSED
+        pause_status: UNPAUSED
         periodic:
           interval: 6
           unit: HOURS
@@ -79,7 +79,7 @@ resources:
           environment_key: Default
 
       trigger:
-        pause_status: PAUSED
+        pause_status: UNPAUSED
         periodic:
           interval: 6
           unit: HOURS
@@ -93,10 +93,14 @@ resources:
 targets:
   dev:
     mode: development
-    
+    # Use DATABRICKS_HOST env var for development
     resources:
       jobs:
         resource_monitor_endpoints:
+          trigger:
+            pause_status: PAUSED
+
+        resource_monitor_apps:
           trigger:
             pause_status: PAUSED
   
@@ -120,4 +124,3 @@ targets:
     
     variables:
       alert_email: prod-alerts@company.com
-      schedule_cron: "0 0 */4 * * ?"  # Every 4 hours in prod
