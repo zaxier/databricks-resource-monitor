@@ -52,14 +52,9 @@ databricks bundle deploy -t prod --profile my-profile --var="alert_email=alerts@
 
 ### Whitelists
 
-Whitelists are embedded in the package at `src/databricks_resource_monitor/config/whitelists/`:
+Whitelists are embedded in the package at `src/databricks_resource_monitor/config/whitelists/`. Each resource type requires its own whitelist file (e.g., `model_endpoints.json`, `apps.json`).
 
-**Simple format:**
-```json
-["endpoint-1", "endpoint-2", "app-1"]
-```
-
-**Extended format:**
+**Whitelist format:**
 ```json
 {
   "description": "Production resources",
