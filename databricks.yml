@@ -28,7 +28,7 @@ resources:
       environments:
         - environment_key: Default
           spec:
-            client: "3"   
+            environment_version: "3"   
             dependencies:
               - ./dist/databricks_resource_monitor-1.0.0-py3-none-any.whl
       
@@ -62,7 +62,7 @@ resources:
       environments:
         - environment_key: Default
           spec:
-            client: "3"   
+            environment_version: "3"   
             dependencies:
               - ./dist/databricks_resource_monitor-1.0.0-py3-none-any.whl
       
